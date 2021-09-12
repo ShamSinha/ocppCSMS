@@ -17,7 +17,7 @@ public class DBConnection {
     
 	private static String dbhost = "jdbc:mysql://localhost:3306/";
 	private static String username = "root";
-	private static String password = "Shubh@m19";
+	private static String password = "";
 	private static Connection conn;
 	
 	@SuppressWarnings("finally")
