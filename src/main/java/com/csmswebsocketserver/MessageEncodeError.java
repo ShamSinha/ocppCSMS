@@ -9,17 +9,35 @@ package com.csmswebsocketserver;
  *
  * @author Shubham
  */
-import java.text.MessageFormat;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.websocket.EncodeException;
 import javax.websocket.Encoder;
 import javax.websocket.EndpointConfig;
 
 
 public class MessageEncodeError implements Encoder.Text<CALLERROR> {
+    private static final int CALLERROR_MESSAGE_TYPE_ID = 4;
+
     @Override
     public String encode(CALLERROR callerror) throws EncodeException {
-        return MessageFormat.format("{0}#{1}#{2}#{3}#{4}", CALLERROR.MessageTypeId, CALLERROR.MessageId, callerror.getErrorCode(), callerror.getErrorDescription(),callerror.getErrorDetails());
-    
+        if (callerror.getMessageId() == null || callerror.getErrorCode() == null) {
+            throw new EncodeException(callerror, "OCPP-J CALLERROR requires a messageId and errorCode");
+        }
+
+        JsonObject errorDetails = callerror.getErrorDetails() == null
+                ? Json.createObjectBuilder().build()
+                : callerror.getErrorDetails();
+
+        return Json.createArrayBuilder()
+                .add(CALLERROR_MESSAGE_TYPE_ID)
+                .add(callerror.getMessageId())
+                .add(callerror.getErrorCode().name())
+                .add(callerror.getErrorDescription() == null ? "" : callerror.getErrorDescription())
+                .add(errorDetails)
+                .build()
+                .toString();
+
     }
 
     @Override

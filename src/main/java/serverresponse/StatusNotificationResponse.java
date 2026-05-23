@@ -5,6 +5,7 @@
  */
 package serverresponse;
 
+import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonException;
 /**
@@ -15,7 +16,7 @@ public class StatusNotificationResponse {
     
     private JsonObject payload;
     public void setpayload() throws JsonException {
-        payload = null ;
+        payload = Json.createObjectBuilder().build() ;
     }
     
     public JsonObject getPayload(){

@@ -23,7 +23,11 @@ public class CostUpdateRequest {
     public void settotalCost(float energyimport, float tariff){
         totalCost = energyimport*tariff ;
     }
-   
+
+    public void setTotalCost(float totalCost){
+        this.totalCost = totalCost ;
+    }
+
     public void settransactionId(String t){
         transactionId = t ;
     }

@@ -18,9 +18,18 @@ public class CALL extends WebsocketMessage {
     public static String Action ;
     private final JsonObject Payload ;
     public static String MessageId ;
+    private final String messageId;
+    private final String action;
 
     public CALL(String Action,JsonObject Payload){
+        this(UUID.randomUUID().toString(), Action, Payload);
+    }
+
+    public CALL(String MessageId, String Action, JsonObject Payload){
+        CALL.MessageId = MessageId ;
         CALL.Action = Action ;
+        this.messageId = MessageId;
+        this.action = Action;
         this.Payload = Payload ;
     }
 
@@ -29,5 +38,13 @@ public class CALL extends WebsocketMessage {
     }
 
     public JsonObject getPayload() { return this.Payload ;}
-    
+
+    public String getMessageId() {
+        return messageId;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
 }

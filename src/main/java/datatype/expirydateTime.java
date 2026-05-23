@@ -10,13 +10,15 @@ package datatype;
  */
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.TimeZone;
 
 public class expirydateTime {    
        
     public String dT(int hour){
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.HOUR_OF_DAY, hour);
-        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
         return df.format(calendar.getTime());
     }
 }

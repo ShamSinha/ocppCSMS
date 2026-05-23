@@ -18,9 +18,15 @@ public class CALLERROR extends WebsocketMessage {
     private final String ErrorDescription ;
     private final JsonObject ErrorDetails ;
     public static String MessageId ;
+    private final String messageId;
 
     public CALLERROR(RPCErrorCodes ErrorCode ,String ErrorDescription ,JsonObject ErrorDetails){
+        this(CALLERROR.MessageId, ErrorCode, ErrorDescription, ErrorDetails);
+    }
 
+    public CALLERROR(String MessageId, RPCErrorCodes ErrorCode ,String ErrorDescription ,JsonObject ErrorDetails){
+        CALLERROR.MessageId = MessageId;
+        this.messageId = MessageId;
         this.ErrorCode = ErrorCode ;
         this.ErrorDescription = ErrorDescription ;
         this.ErrorDetails = ErrorDetails ;
@@ -34,5 +40,9 @@ public class CALLERROR extends WebsocketMessage {
     }
     public JsonObject getErrorDetails() {
         return this.ErrorDetails ;}
-          
+
+    public String getMessageId() {
+        return messageId;
+    }
+
     }

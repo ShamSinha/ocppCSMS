@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="500" viewBox="0 0 1100 500">
+  <rect width="1100" height="500" fill="#f8fafc"/>
+  <text x="550" y="52" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#0f172a">CSMS OCPP-J Message Flow</text>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/>
+    </marker>
+  </defs>
+  <rect x="85" y="105" width="230" height="300" rx="14" fill="#e0f2fe" stroke="#0284c7" stroke-width="3"/>
+  <text x="200" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#075985">OCPPcharger</text>
+  <text x="200" y="184" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#075985">Android Charging Station</text>
+  <rect x="785" y="105" width="230" height="300" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="3"/>
+  <text x="900" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#166534">ocppCSMS</text>
+  <text x="900" y="184" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#166534">WebSocket endpoint</text>
+  <line x1="330" y1="130" x2="770" y2="130" stroke="#2563eb" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="550" y="118" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#0f172a">[2, id, "BootNotification", payload]</text>
+  <line x1="770" y1="178" x2="330" y2="178" stroke="#2563eb" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="550" y="166" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#0f172a">[3, id, {"status":"Accepted", ...}]</text>
+  <line x1="330" y1="245" x2="770" y2="245" stroke="#2563eb" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="550" y="233" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#0f172a">Authorize, StatusNotification, TransactionEvent</text>
+  <line x1="770" y1="293" x2="330" y2="293" stroke="#2563eb" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="550" y="281" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#0f172a">CALLRESULT or CALLERROR</text>
+  <line x1="330" y1="360" x2="770" y2="360" stroke="#2563eb" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="550" y="348" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#0f172a">Heartbeat every configured interval</text>
+  <text x="550" y="455" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#475569">Endpoint path: /CSMSWebsocketServer-1/CS01, subprotocols: ocpp2.1, ocpp2.0.1</text>
+</svg>

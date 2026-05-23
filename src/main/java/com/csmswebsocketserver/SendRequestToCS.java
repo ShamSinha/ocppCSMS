@@ -13,6 +13,8 @@ import enumdatatype.OperationalStatusEnumType;
 import enumdatatype.ReportBaseEnumType;
 import enumdatatype.ResetEnumType;
 import java.io.IOException;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.websocket.EncodeException;
 import javax.websocket.Session;
 import serverrequest.ChangeAvailabilityRequest;
@@ -28,53 +30,67 @@ import serverrequest.SetVariablesRequest;
  * @author Shubham
  */
 public class SendRequestToCS {
-   /* private UUIDgenerator uuiDgenerator = new UUIDgenerator();
-    private Session session ;
-    public SendRequestToCS(Session session){
-        this.session = session ;
+
+    public void send(Session session, String action, JsonObject payload) throws IOException, EncodeException {
+        JsonObject safePayload = payload == null ? Json.createObjectBuilder().build() : payload;
+        session.getBasicRemote().sendObject(new CALL(action, safePayload));
     }
-    
-    public void sendChangeAvailabilityRequest(OperationalStatusEnumType operationalStatus, EVSEType evse) throws IOException, EncodeException{
-        ChangeAvailabilityRequest changeAvailability = new ChangeAvailabilityRequest(operationalStatus,evse);
-        CALL call = new CALL(2,uuiDgenerator.uuid(),"ChangeAvailability",changeAvailability.setpayload());
-        this.session.getBasicRemote().sendObject(call);
+
+    public void sendChangeAvailabilityRequest(Session session, OperationalStatusEnumType operationalStatus, EVSEType evse)
+            throws IOException, EncodeException {
+        ChangeAvailabilityRequest changeAvailability = new ChangeAvailabilityRequest();
+        changeAvailability.setOperationalStatus(operationalStatus);
+        changeAvailability.setEvse(evse);
+        changeAvailability.setpayload();
+        send(session, "ChangeAvailability", changeAvailability.getPayload());
     }
-    
-    public void sendCostUpdateRequest(float totalCost, String transactionId) throws IOException, EncodeException{
-        CostUpdateRequest costUpdate = new CostUpdateRequest(totalCost,transactionId);
-        CALL call = new CALL(2,uuiDgenerator.uuid(),"CostUpdate",costUpdate.setpayload());
-        this.session.getBasicRemote().sendObject(call);
+
+    public void sendCostUpdatedRequest(Session session, float totalCost, String transactionId)
+            throws IOException, EncodeException {
+        CostUpdateRequest costUpdate = new CostUpdateRequest();
+        costUpdate.setTotalCost(totalCost);
+        costUpdate.settransactionId(transactionId);
+        costUpdate.setpayload();
+        send(session, "CostUpdated", costUpdate.getPayload());
     }
-    
-    public void sendResetRequest(ResetEnumType r ,int evseId) throws IOException, EncodeException{
-        ResetRequest reset = new ResetRequest(r,evseId);
-        CALL call = new CALL(2,uuiDgenerator.uuid(),"Reset",reset.setpayload());
-        this.session.getBasicRemote().sendObject(call);
+
+    public void sendResetRequest(Session session, ResetEnumType resetType, int evseId)
+            throws IOException, EncodeException {
+        ResetRequest reset = new ResetRequest();
+        reset.setType(resetType);
+        reset.setEvseId(evseId);
+        reset.setpayload();
+        send(session, "Reset", reset.getPayload());
     }
-    
-    public void sendSetDisplayMessageRequest(MessageInfoType m) throws IOException, EncodeException{
-        SetDisplayMessageRequest  setDisplayMessage = new SetDisplayMessageRequest(m);
-        CALL call = new CALL(2,uuiDgenerator.uuid(),"SetDisplayMessage",setDisplayMessage.setpayload());
-        this.session.getBasicRemote().sendObject(call);
+
+    public void sendSetDisplayMessageRequest(Session session, MessageInfoType messageInfo)
+            throws IOException, EncodeException {
+        SetDisplayMessageRequest setDisplayMessage = new SetDisplayMessageRequest();
+        setDisplayMessage.setpayload(messageInfo);
+        send(session, "SetDisplayMessage", setDisplayMessage.getPayload());
     }
-    
-    public void sendSetVariablesRequest(SetVariableDataType setVariable) throws IOException, EncodeException{
-        SetVariablesRequest setVariables = new SetVariablesRequest(setVariable);
-        CALL call = new CALL(2,uuiDgenerator.uuid(),"SetVariables",setVariables.setpayload());
-        this.session.getBasicRemote().sendObject(call);   
+
+    public void sendSetVariablesRequest(Session session, SetVariableDataType setVariable)
+            throws IOException, EncodeException {
+        SetVariablesRequest setVariables = new SetVariablesRequest();
+        setVariables.setpayload(setVariable);
+        send(session, "SetVariables", setVariables.getPayload());
     }
-    
-    public void sendGetVariablesRequest(GetVariableDataType getVariable) throws IOException, EncodeException{
-        GetVariablesRequest getVariables = new GetVariablesRequest(getVariable);
-        CALL call = new CALL(2,uuiDgenerator.uuid(),"GetVariables",getVariables.setpayload());
-        this.session.getBasicRemote().sendObject(call);   
+
+    public void sendGetVariablesRequest(Session session, GetVariableDataType getVariable)
+            throws IOException, EncodeException {
+        GetVariablesRequest getVariables = new GetVariablesRequest();
+        getVariables.setGetVariableData(getVariable);
+        getVariables.setpayload();
+        send(session, "GetVariables", getVariables.getPayload());
     }
-    
-    public void sendGetBaseReportRequest(int requestId, ReportBaseEnumType reportBase) throws IOException, EncodeException{
-        GetBaseReportRequest getBaseReport = new GetBaseReportRequest(requestId, reportBase);
-        CALL call = new CALL(2,uuiDgenerator.uuid(),"GetBaseReport",getBaseReport.setpayload());
-        this.session.getBasicRemote().sendObject(call);   
+
+    public void sendGetBaseReportRequest(Session session, int requestId, ReportBaseEnumType reportBase)
+            throws IOException, EncodeException {
+        GetBaseReportRequest getBaseReport = new GetBaseReportRequest();
+        getBaseReport.setRequestId(requestId);
+        getBaseReport.setReportBase(reportBase);
+        getBaseReport.setpayload();
+        send(session, "GetBaseReport", getBaseReport.getPayload());
     }
-    
-    */
 }

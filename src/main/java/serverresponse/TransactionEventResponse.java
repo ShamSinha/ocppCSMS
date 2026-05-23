@@ -46,13 +46,15 @@ public class TransactionEventResponse {
                 objectBuilder.add("totalCost", this.totalCost);
             }
             
-            objectBuilder.add("chargingpriority", this.chargingPriority);
+            objectBuilder.add("chargingPriority", this.chargingPriority);
             
             if(haveIdToken){
                 objectBuilder.add("idTokenInfo", idTokenInfo.getp()) ;
             }   
             
-            objectBuilder.add("updatedPersonalMessage" , messageContent.getp()) ;
+            if (messageContent != null && messageContent.getp() != null) {
+                objectBuilder.add("updatedPersonalMessage" , messageContent.getp()) ;
+            }
          
             
         payload = objectBuilder.build();

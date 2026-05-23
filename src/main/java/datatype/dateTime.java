@@ -12,12 +12,14 @@ package datatype;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.TimeZone;
 
 public class dateTime {    
        
     public String dT(){
         Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
         return df.format(calendar.getTime());
     }
 

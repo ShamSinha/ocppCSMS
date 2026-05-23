@@ -18,7 +18,7 @@ public class IdTokenInfoType {
     
     private AuthorizationStatusEnumType status = AuthorizationStatusEnumType.Invalid;
     private String cacheExpiryDateTime ;
-    private int chargingPriority ;
+    private Integer chargingPriority ;
     private MessageContentType personalMessage ;
     private JsonObject idTokenInfo ;
     
@@ -42,17 +42,27 @@ public class IdTokenInfoType {
  
 
     public JsonObject getp(){
+        if (idTokenInfo == null) {
+            setp();
+        }
         return idTokenInfo ;
     }
-    
+
     public void setp(){
-        
+
         JsonObjectBuilder objectBuilder = Json.createObjectBuilder()
-            .add("status", this.status.toString())
-            .add("cacheExpiryDateTime",this.cacheExpiryDateTime)
-            .add("getChargingPriority", this.chargingPriority)
-            .add("personalMessage", this.personalMessage.getp());
-    
+            .add("status", this.status.toString());
+
+        if (this.cacheExpiryDateTime != null) {
+            objectBuilder.add("cacheExpiryDateTime", this.cacheExpiryDateTime);
+        }
+        if (this.chargingPriority != null) {
+            objectBuilder.add("chargingPriority", this.chargingPriority);
+        }
+        if (this.personalMessage != null && this.personalMessage.getp() != null) {
+            objectBuilder.add("personalMessage", this.personalMessage.getp());
+        }
+
         idTokenInfo =  objectBuilder.build() ;
-    }       
+    }
 }

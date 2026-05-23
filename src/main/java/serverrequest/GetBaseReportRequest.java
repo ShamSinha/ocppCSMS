@@ -19,11 +19,11 @@ public class GetBaseReportRequest {
     private ReportBaseEnumType reportBase ;
 
     public void setRequestId(int requestId) {
-        requestId = requestId;
+        this.requestId = requestId;
     }
 
     public void setReportBase(ReportBaseEnumType reportBase) {
-        reportBase = reportBase;
+        this.reportBase = reportBase;
     }
 
     public void setpayload(){

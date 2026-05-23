@@ -22,7 +22,8 @@ public class HeartBeatResponse {
    
     public String setCurrentTime() {
         dateTime d = new dateTime() ;
-        return d.dT();
+        this.currentTime = d.dT();
+        return this.currentTime;
     }
  
     public void setpayload(){
