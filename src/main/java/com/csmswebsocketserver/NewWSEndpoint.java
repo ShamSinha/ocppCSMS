@@ -45,6 +45,8 @@ public class NewWSEndpoint {
     private static final Set<Session> sessions = Collections.synchronizedSet(new HashSet<Session>());
     private static final Set<String> User = Collections.synchronizedSet(new HashSet<String>());
     private static final Map<String, Session> chargingStations = new ConcurrentHashMap<String, Session>();
+    private static final Map<String, PendingCsoRequest> pendingCsoRequests = new ConcurrentHashMap<String, PendingCsoRequest>();
+    private static final Map<Integer, PendingCsoRequest> pendingDisplayMessageRequests = new ConcurrentHashMap<Integer, PendingCsoRequest>();
 
     @OnOpen
     public void initSession(Session session,@PathParam("client") String client) throws IOException {
@@ -101,6 +103,7 @@ public class NewWSEndpoint {
                try {
                    JsonObject payload = responsePayloadFor(call);
                    session.getBasicRemote().sendObject(new CALLRESULT(call.getMessageId(), payload));
+                   relayNotifyDisplayMessages(call);
                } catch (OcppCallException e) {
                    sendCallError(session, call.getMessageId(), e.code, e.getMessage());
                } catch (RuntimeException e) {
@@ -110,12 +113,12 @@ public class NewWSEndpoint {
 
             }
             else if(msg instanceof CALLRESULT){
+                relayCsoCallResult((CALLRESULT) msg);
 
-
-            }    
+            }
             else if(msg instanceof CALLERROR){
-
-            }   
+                relayCsoCallError((CALLERROR) msg);
+            }
         }
 
     }
@@ -124,6 +127,11 @@ public class NewWSEndpoint {
         String type = object.getString("type", "");
         if ("RfidUsersList".equals(type)) {
             sendJson(session, RfidUserRegistry.usersPayload());
+            return;
+        }
+
+        if ("ForwardOcppCall".equals(type)) {
+            forwardOcppCall(object, session);
             return;
         }
 
@@ -159,6 +167,143 @@ public class NewWSEndpoint {
         }
 
         sendCsoResult(session, false, "Unknown CSO message type: " + type);
+    }
+
+    private void forwardOcppCall(JsonObject object, Session csoSession) throws IOException {
+        String chargingStationId = object.getString("chargingStationId", "CS01");
+        String action = object.getString("action", "");
+        if (action.trim().length() == 0) {
+            sendOcppForwardResult(csoSession, false, "OCPP action is required.");
+            return;
+        }
+        if (!OcppActionRegistry.isImplementedServerRequest(action)) {
+            sendOcppForwardResult(csoSession, false, "CSMS forwarding is not enabled for " + action + ".");
+            return;
+        }
+
+        Session chargingStationSession = chargingStations.get(chargingStationId);
+        if (chargingStationSession == null || !chargingStationSession.isOpen()) {
+            sendOcppForwardResult(csoSession, false, "Charging station " + chargingStationId + " is not connected.");
+            return;
+        }
+
+        JsonObject payload = object.getJsonObject("payload");
+        CALL call = new CALL(action, payload == null ? Json.createObjectBuilder().build() : payload);
+        Integer displayRequestId = displayRequestId(action, call.getPayload());
+        PendingCsoRequest pendingRequest = new PendingCsoRequest(csoSession, chargingStationId, action, displayRequestId);
+        pendingCsoRequests.put(call.getMessageId(), pendingRequest);
+        if (displayRequestId != null) {
+            pendingDisplayMessageRequests.put(displayRequestId, pendingRequest);
+        }
+        try {
+            chargingStationSession.getBasicRemote().sendObject(call);
+            sendOcppForwardResult(csoSession, true, "Sent " + action + " to " + chargingStationId + ".");
+        } catch (EncodeException e) {
+            pendingCsoRequests.remove(call.getMessageId());
+            if (displayRequestId != null) {
+                pendingDisplayMessageRequests.remove(displayRequestId);
+            }
+            sendOcppForwardResult(csoSession, false, "Could not encode " + action + " for " + chargingStationId + ".");
+        }
+    }
+
+    private void relayCsoCallResult(CALLRESULT callResult) throws IOException {
+        PendingCsoRequest pending = pendingCsoRequests.remove(callResult.getMessageId());
+        if (pending == null) {
+            return;
+        }
+        if (!pending.session.isOpen()) {
+            if (pending.displayRequestId != null) {
+                pendingDisplayMessageRequests.remove(pending.displayRequestId);
+            }
+            return;
+        }
+
+        JsonObject resultPayload = callResult.getPayload();
+        if (pending.displayRequestId != null
+                && (resultPayload == null || !"Accepted".equals(resultPayload.getString("status", "")))) {
+            pendingDisplayMessageRequests.remove(pending.displayRequestId);
+        }
+
+        sendJson(pending.session, Json.createObjectBuilder()
+                .add("type", "OcppCallResult")
+                .add("ok", true)
+                .add("message", pending.action + " response from " + pending.chargingStationId + ".")
+                .add("chargingStationId", pending.chargingStationId)
+                .add("action", pending.action)
+                .add("messageId", callResult.getMessageId())
+                .add("payload", resultPayload == null ? Json.createObjectBuilder().build() : resultPayload)
+                .build());
+    }
+
+    private void relayNotifyDisplayMessages(CALL call) throws IOException {
+        if (!"NotifyDisplayMessages".equals(call.getAction()) || call.getPayload() == null) {
+            return;
+        }
+
+        int requestId = call.getPayload().getInt("requestId", -1);
+        PendingCsoRequest pending = pendingDisplayMessageRequests.get(requestId);
+        if (pending == null) {
+            return;
+        }
+        if (!pending.session.isOpen()) {
+            pendingDisplayMessageRequests.remove(requestId);
+            return;
+        }
+
+        sendJson(pending.session, Json.createObjectBuilder()
+                .add("type", "OcppNotifyDisplayMessages")
+                .add("ok", true)
+                .add("message", "Display message data from " + pending.chargingStationId + ".")
+                .add("chargingStationId", pending.chargingStationId)
+                .add("action", call.getAction())
+                .add("requestId", requestId)
+                .add("payload", call.getPayload())
+                .build());
+
+        if (!call.getPayload().getBoolean("tbc", false)) {
+            pendingDisplayMessageRequests.remove(requestId);
+        }
+    }
+
+    private Integer displayRequestId(String action, JsonObject payload) {
+        if (!"GetDisplayMessages".equals(action) || payload == null || !payload.containsKey("requestId")) {
+            return null;
+        }
+        return payload.getInt("requestId");
+    }
+
+    private void relayCsoCallError(CALLERROR callError) throws IOException {
+        PendingCsoRequest pending = pendingCsoRequests.remove(callError.getMessageId());
+        if (pending == null) {
+            return;
+        }
+        if (pending.displayRequestId != null) {
+            pendingDisplayMessageRequests.remove(pending.displayRequestId);
+        }
+        if (!pending.session.isOpen()) {
+            return;
+        }
+
+        sendJson(pending.session, Json.createObjectBuilder()
+                .add("type", "OcppCallError")
+                .add("ok", false)
+                .add("message", pending.action + " failed on " + pending.chargingStationId + ": " + callError.getErrorDescription())
+                .add("chargingStationId", pending.chargingStationId)
+                .add("action", pending.action)
+                .add("messageId", callError.getMessageId())
+                .add("errorCode", callError.getErrorCode().name())
+                .add("description", callError.getErrorDescription() == null ? "" : callError.getErrorDescription())
+                .add("details", callError.getErrorDetails() == null ? Json.createObjectBuilder().build() : callError.getErrorDetails())
+                .build());
+    }
+
+    private void sendOcppForwardResult(Session session, boolean ok, String message) throws IOException {
+        sendJson(session, Json.createObjectBuilder()
+                .add("type", "OcppForwardResult")
+                .add("ok", ok)
+                .add("message", message)
+                .build());
     }
 
     private void sendCsoResult(Session session, boolean ok, String message) throws IOException {
@@ -216,6 +361,7 @@ public class NewWSEndpoint {
             case "MeterValues" :
             case "NotifyEvent" :
             case "NotifyReport" :
+            case "NotifyDisplayMessages" :
             case "PublishFirmwareStatusNotification" :
             case "SecurityEventNotification" :
                 return Json.createObjectBuilder().build();
@@ -303,10 +449,26 @@ public class NewWSEndpoint {
         }
     }
 
+    private static class PendingCsoRequest {
+        private final Session session;
+        private final String chargingStationId;
+        private final String action;
+        private final Integer displayRequestId;
+
+        PendingCsoRequest(Session session, String chargingStationId, String action, Integer displayRequestId) {
+            this.session = session;
+            this.chargingStationId = chargingStationId;
+            this.action = action;
+            this.displayRequestId = displayRequestId;
+        }
+    }
+
     @OnClose
     public void onClose(Session session) {
       sessions.remove(session);
       chargingStations.values().remove(session);
+      pendingCsoRequests.values().removeIf(pending -> pending.session.equals(session));
+      pendingDisplayMessageRequests.values().removeIf(pending -> pending.session.equals(session));
     }
    
     

@@ -83,6 +83,7 @@ public final class OcppActionRegistry {
             "SetDERControl",
             "SetDefaultTariff",
             "SetDisplayMessage",
+            "SetDisplayMessages",
             "SetMonitoringBase",
             "SetMonitoringLevel",
             "SetNetworkProfile",
@@ -108,6 +109,7 @@ public final class OcppActionRegistry {
             "Heartbeat",
             "LogStatusNotification",
             "MeterValues",
+            "NotifyDisplayMessages",
             "NotifyEvent",
             "NotifyReport",
             "PublishFirmwareStatusNotification",
@@ -120,9 +122,11 @@ public final class OcppActionRegistry {
             "ChangeAvailability",
             "CostUpdated",
             "GetBaseReport",
+            "GetDisplayMessages",
             "GetVariables",
             "Reset",
             "SetDisplayMessage",
+            "SetDisplayMessages",
             "SetVariables"
     )));
 

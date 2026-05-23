@@ -95,6 +95,17 @@ The message models keep the OCPP message id on each decoded/encoded frame, so mu
 | `GetVariables` | `sendGetVariablesRequest(...)` |
 | `GetBaseReport` | `sendGetBaseReportRequest(...)` |
 
+`OCPPbasedCSO` can also trigger the basic operator actions through `/CSO`. The CSO sends a JSON admin message and the CSMS forwards it to the connected charger as a normal OCPP-J `CALL`:
+
+```json
+{"type":"ForwardOcppCall","chargingStationId":"CS01","action":"SetVariables","payload":{"setVariableData":[]}}
+{"type":"ForwardOcppCall","chargingStationId":"CS01","action":"GetVariables","payload":{"getVariableData":[]}}
+{"type":"ForwardOcppCall","chargingStationId":"CS01","action":"SetDisplayMessage","payload":{"message":{}}}
+{"type":"ForwardOcppCall","chargingStationId":"CS01","action":"GetDisplayMessages","payload":{"requestId":1}}
+```
+
+CSMS replies to the CSO with `OcppForwardResult`, then relays the charger response as `OcppCallResult` or `OcppCallError`. For `GetDisplayMessages`, charger-originated `NotifyDisplayMessages` payloads are relayed as `OcppNotifyDisplayMessages`.
+
 ## Example Boot Flow
 
 Charger sends:
